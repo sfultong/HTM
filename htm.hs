@@ -7,14 +7,15 @@ import qualified Data.Map as M
 
 type Active                             = Bool
 type Strength                           = Float
-type Connection                         = (Active, Strength)
+type Synapse                            = (Active, Strength)
+type Segment                            = [Synapse]
 type Coord                              = (Int, Int, Int) -- Level, X, Y
 type Threshold                          = Float
 
 {-- Cells have the coordinates of *incoming* connections.  A cell
     by itself does not know where it is
 --}
-data Cell = Cell {cellDendrites         :: Map Coord Connection}
+data Cell = Cell {cellDendrites         :: Map Coord Synapse}
 
 emptyCell = Cell {cellDendrites         = M.empty}
 
@@ -26,7 +27,7 @@ data Column = Column {colCoord          :: Coord
                         Update: may not true - maybe use a Map
                                 just like Cells
                      --}
-                     ,colDendrites      :: Map Coord Connection
+                     ,colDendrites      :: Map Coord Synapse
                      }
 
 emptyColumn = Column {colCoord          = (0,0,0)
@@ -48,7 +49,7 @@ TODO: try and whack the calls to flip everywhere and embrace
       partial application
 --}
 
-isConnected :: Connection -> Threshold -> Bool
+isConnected :: Synapse -> Threshold -> Bool
 isConnected (active, strength) t = active && strength >= t
 
 isCellActive :: Cell -> Threshold -> Bool
@@ -69,10 +70,10 @@ getOutput reg = let cols        = (regCols reg)
                     threshold   = (regMinThreshold reg)
                 in filter (flip isColActive threshold) cols
 
-createCell :: Map Coord Connection -> Cell
+createCell :: Map Coord Synapse -> Cell
 createCell m = Cell { cellDendrites = m }
 
-createColumn :: Coord -> [Cell] -> Map Coord Connection -> Column
+createColumn :: Coord -> [Cell] -> Map Coord Synapse -> Column
 createColumn coord cells proximalDendrites = 
         Column {colCoord        = coord
                ,colCells        = cells
